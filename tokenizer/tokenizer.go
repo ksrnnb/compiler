@@ -91,3 +91,16 @@ func (t Tokenizer) Symbol() (string, error) {
 
 	return t.currentToken, nil
 }
+
+func (t Tokenizer) Identifier() (string, error) {
+	tokenType, err := t.TokenType()
+	if err != nil {
+		return "", fmt.Errorf("Identifier(): token type should be identifier, %v", err)
+	}
+
+	if tokenType != Identifier {
+		return "", errors.New("Identifier(): token type should be identifier")
+	}
+
+	return t.currentToken, nil
+}
