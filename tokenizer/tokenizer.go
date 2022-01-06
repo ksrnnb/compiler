@@ -123,3 +123,16 @@ func (t Tokenizer) IntVal() (int, error) {
 	}
 	return intValue, nil
 }
+
+func (t Tokenizer) StringVal() (string, error) {
+	tokenType, err := t.TokenType()
+	if err != nil {
+		return "", fmt.Errorf("StringVal(): token type should be StringConst, %v", err)
+	}
+
+	if tokenType != StringConst {
+		return "", errors.New("StringVal(): token type should be StringConst")
+	}
+
+	return t.currentToken, nil
+}
