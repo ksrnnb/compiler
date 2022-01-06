@@ -3,8 +3,6 @@ package tokenizer
 import (
 	"bufio"
 	"io"
-
-	"github.com/ksrnnb/compiler/utils"
 )
 
 type TokenType int
@@ -36,36 +34,6 @@ func (t *Tokenizer) Advance() {
 
 }
 
-func (t Tokenizer) TokenType() TokenType {
-	if utils.IsInSlice(getKeywordTokens(), t.currentToken) {
-		return Keyword
-	}
-
-	return 0
-}
-
-func getKeywordTokens() []string {
-	return []string{
-		"class",
-		"constructor",
-		"function",
-		"method",
-		"field",
-		"static",
-		"var",
-		"int",
-		"char",
-		"boolean",
-		"void",
-		"true",
-		"false",
-		"null",
-		"this",
-		"let",
-		"do",
-		"if",
-		"else",
-		"while",
-		"return",
-	}
+func (t Tokenizer) TokenType() (TokenType, error) {
+	return tokenType(t.currentToken)
 }
