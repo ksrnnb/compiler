@@ -78,3 +78,16 @@ func (t Tokenizer) Keyword() (KeywordType, error) {
 
 	return keyword(t.currentToken)
 }
+
+func (t Tokenizer) Symbol() (string, error) {
+	tokenType, err := t.TokenType()
+	if err != nil {
+		return "", fmt.Errorf("Symbol(): token type should be symbol, %v", err)
+	}
+
+	if tokenType != Symbol {
+		return "", errors.New("Symbol(): token type should be symbol")
+	}
+
+	return t.currentToken, nil
+}
