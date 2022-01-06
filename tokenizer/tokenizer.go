@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 )
 
 type TokenType int
@@ -103,4 +104,22 @@ func (t Tokenizer) Identifier() (string, error) {
 	}
 
 	return t.currentToken, nil
+}
+
+func (t Tokenizer) IntVal() (int, error) {
+	tokenType, err := t.TokenType()
+	if err != nil {
+		return 0, fmt.Errorf("IntVal(): token type should be IntConst, %v", err)
+	}
+
+	if tokenType != IntConst {
+		return 0, errors.New("IntVal(): token type should be IntConst")
+	}
+
+	intValue, err := strconv.Atoi(t.currentToken)
+
+	if err != nil {
+		return 0, fmt.Errorf("IntVal(): error while parsing int, %v", err)
+	}
+	return intValue, nil
 }
