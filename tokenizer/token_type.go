@@ -37,7 +37,7 @@ func isKeyword(token string) bool {
 }
 
 func isSymbol(token string) bool {
-	return utils.IsInSlice(getKeywordTokens(), token)
+	return utils.IsInSlice(getSymbolTokens(), token)
 }
 
 func isIntConst(token string) bool {
