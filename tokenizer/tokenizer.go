@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 )
 
 type TokenType int
@@ -45,9 +46,10 @@ const (
 )
 
 type Tokenizer struct {
-	scanner      *bufio.Scanner
-	isDone       bool
-	currentToken string
+	scanner       *bufio.Scanner
+	isDone        bool
+	currentToken  string
+	currentTokens []string
 }
 
 func NewTokenizer(input io.Reader) *Tokenizer {
@@ -60,7 +62,45 @@ func (t Tokenizer) HasMoreTokens() bool {
 }
 
 func (t *Tokenizer) Advance() {
+	if t.isDone {
+		return
+	}
 
+	if len(t.currentTokens) == 0 {
+		if !t.scanner.Scan() {
+			t.isDone = true
+			return
+		}
+
+		line := t.scanner.Text()
+		trimmedLine := strings.Trim(line, " ")
+		if len(trimmedLine) == 0 {
+			t.Advance()
+			return
+		}
+
+		t.currentTokens = strings.Split(trimmedLine, " ")
+		t.Advance()
+		return
+	}
+
+	token := t.currentTokens[0]
+
+	// コメントの場合は、残りを無視して次の行へ
+	if token == "//" {
+		t.currentTokens = []string{}
+		t.Advance()
+		return
+	}
+
+	t.currentToken = token
+
+	if len(t.currentTokens) == 1 {
+		t.currentTokens = []string{}
+		return
+	}
+
+	t.currentTokens = t.currentTokens[1:]
 }
 
 func (t Tokenizer) TokenType() (TokenType, error) {
