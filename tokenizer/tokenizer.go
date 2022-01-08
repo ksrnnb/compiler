@@ -7,6 +7,8 @@ import (
 	"io"
 	"strconv"
 	"strings"
+
+	"github.com/ksrnnb/compiler/utils"
 )
 
 type TokenType int
@@ -46,10 +48,11 @@ const (
 )
 
 type Tokenizer struct {
-	scanner       *bufio.Scanner
-	isDone        bool
-	currentToken  string
-	currentTokens []string
+	scanner              *bufio.Scanner
+	isDone               bool
+	currentToken         string
+	currentTokens        []string
+	isInMultiLineComment bool
 }
 
 func NewTokenizer(input io.Reader) *Tokenizer {
@@ -88,7 +91,9 @@ func (t *Tokenizer) Advance() {
 		}
 
 		line := t.scanner.Text()
-		trimmedLine := strings.Trim(line, " ")
+
+		trimmedLine := utils.TrimSpaceAndTab(line)
+
 		if len(trimmedLine) == 0 {
 			t.Advance()
 			return
@@ -99,16 +104,28 @@ func (t *Tokenizer) Advance() {
 		return
 	}
 
-	token := t.currentTokens[0]
+	t.currentToken = t.currentTokens[0]
 
-	// コメントの場合は、残りを無視して次の行へ
-	if token == "//" {
-		t.currentTokens = []string{}
+	// 複数行コメント
+	if t.isInMultiLineComment {
+		t.skipMultiLineComment()
 		t.Advance()
 		return
 	}
 
-	t.currentToken = token
+	// 複数行コメント
+	if strings.HasPrefix(t.currentToken, "/*") {
+		t.isInMultiLineComment = true
+		t.Advance()
+		return
+	}
+
+	// コメントの場合は、残りを無視して次の行へ
+	if strings.HasPrefix(t.currentToken, "//") {
+		t.currentTokens = []string{}
+		t.Advance()
+		return
+	}
 
 	if len(t.currentTokens) == 1 {
 		t.currentTokens = []string{}
@@ -190,4 +207,35 @@ func (t Tokenizer) StringVal() (string, error) {
 	}
 
 	return t.currentToken, nil
+}
+
+func (t *Tokenizer) skipMultiLineComment() {
+	for i, token := range t.currentTokens {
+		index := strings.Index(token, "*/")
+		if index == -1 {
+			continue
+		}
+
+		t.isInMultiLineComment = false
+		afterCommentIndex := index + len("*/")
+
+		// コメントのあとにスペースがあって、その後に式が続く場合
+		if len(t.currentTokens) > i {
+			t.currentTokens = t.currentTokens[i+1:]
+		} else {
+			t.currentTokens = []string{}
+		}
+
+		// コメントの後にもスペースなしで式が続く場合
+		if len(token) > afterCommentIndex {
+			newToken := utils.TrimSpaceAndTab(token[afterCommentIndex:])
+			t.currentTokens = append([]string{newToken}, t.currentTokens...)
+			return
+		}
+
+		return
+	}
+
+	// " */ " がみつからない場合は次の行を読み込むため、リセットする
+	t.currentTokens = []string{}
 }
