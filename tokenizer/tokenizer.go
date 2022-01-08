@@ -54,11 +54,26 @@ type Tokenizer struct {
 
 func NewTokenizer(input io.Reader) *Tokenizer {
 	sc := bufio.NewScanner(input)
-	return &Tokenizer{scanner: sc, isDone: false}
+	tokenizer := &Tokenizer{scanner: sc, isDone: false}
+
+	tokenizer.output()
+	return tokenizer
+}
+
+func (t *Tokenizer) output() {
+	// TODO: ***T.xmlファイルの作成
+	for {
+		if !t.HasMoreTokens() {
+			break
+		}
+
+		t.Advance()
+		fmt.Println(t.currentToken)
+	}
 }
 
 func (t Tokenizer) HasMoreTokens() bool {
-	return t.isDone
+	return !t.isDone
 }
 
 func (t *Tokenizer) Advance() {
